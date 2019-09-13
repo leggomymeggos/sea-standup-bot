@@ -1,0 +1,11 @@
+.idea/*
+*.iml
+
+**/build/**
+**/lib/**
+**/.gradle/**
+
+**/out/**
+
+concourse/secrets.*
+concourse/keys/
