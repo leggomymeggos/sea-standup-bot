@@ -1,0 +1,21 @@
+slack:
+  api:
+    token: "test-api-token"
+  url:
+    open_im: "https://slack.com/api/im.open"
+    user_info_by_email: "https://slack.com/api/users.lookupByEmail"
+    post_message: "https://slack.com/api/chat.postMessage"
+  callback_token: "test-callback-token"
+
+google_sheets:
+  url: "https://script.google.com/macros/s/AKfycbxITHXIZGf3sdqUbZfksYV0ONGwye135PyNra6rR77Ae6euKck/exec"
+  token: "test-sheets-token"
+
+spring:
+  datasource:
+    url: "jdbc:h2:mem:testdb"
+    driver-class-name: "org.h2.Driver"
+    username: "sa"
+    password: "password"
+  jpa:
+    database-platform: "org.hibernate.dialect.H2Dialect"
