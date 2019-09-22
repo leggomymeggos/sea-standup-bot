@@ -1,7 +1,9 @@
 package com.leggomymeggos.standupselector.state
 
 import com.leggomymeggos.standupselector.GoogleSheetsApiClient
+import com.leggomymeggos.standupselector.standuppers.Standupper
 import org.springframework.stereotype.Service
+import java.sql.Date
 
 @Service
 class StateService(
@@ -22,5 +24,17 @@ class StateService(
         }
 
         stateRepository.saveAll(stateEntities)
+    }
+
+    fun recordSelection(standupper: Standupper) {
+        stateRepository.getLatestState().let { entity ->
+            val selected = entity.selected.split(",").filterNot { it.isEmpty() }.toMutableList()
+            selected.add(standupper.slackName)
+            stateRepository.updateSelectedForEntity(entity.id, selected.joinToString(","))
+        }
+    }
+
+    fun currentWeek(): Date {
+        return stateRepository.getLatestState().weekOf
     }
 }

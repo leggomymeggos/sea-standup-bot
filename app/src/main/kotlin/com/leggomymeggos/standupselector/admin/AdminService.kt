@@ -14,4 +14,10 @@ class AdminService(
         }
         adminRepository.saveAll(admins)
     }
+
+    fun getAdmins(): List<Admin> {
+        return adminRepository.findAll().map {
+            Admin(slackName = it.slackName, email = it.email)
+        }
+    }
 }

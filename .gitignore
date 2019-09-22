@@ -9,3 +9,7 @@
 
 concourse/secrets.*
 concourse/keys/
+
+**/node_modules/**
+
+.secrets

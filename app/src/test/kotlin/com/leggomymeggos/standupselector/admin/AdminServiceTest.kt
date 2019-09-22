@@ -12,7 +12,7 @@ class AdminServiceTest {
     private val subject = AdminService(googleSheetsApiClient, adminRepository)
 
     @Test
-    fun `getAdmins fetches and saves admins`() {
+    fun `populateAdmins fetches and saves admins`() {
         whenever(googleSheetsApiClient.getAdmins()).thenReturn(
             AdminResponse(
                 listOf(
@@ -33,5 +33,21 @@ class AdminServiceTest {
             assertThat(it.email).isEqualTo("e@mail.com")
             assertThat(it.slackName).isEqualTo("slack-name")
         }
+    }
+
+    @Test
+    fun `getAdmins gets admins`() {
+        whenever(adminRepository.findAll()).thenReturn(listOf(
+            AdminEntity(slackName = "slack-name", email = "e@mail.com"),
+            AdminEntity(slackName = "other-name", email = "other@mail.com")
+        ))
+
+        val admins = subject.getAdmins()
+
+        verify(adminRepository).findAll()
+        assertThat(admins).containsExactly(
+            Admin(slackName = "slack-name", email = "e@mail.com"),
+            Admin(slackName = "other-name", email = "other@mail.com")
+        )
     }
 }

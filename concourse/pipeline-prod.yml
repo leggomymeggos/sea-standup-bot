@@ -1,0 +1,86 @@
+resources:
+  - name: version
+    type: semver
+    source:
+      initial_version: 0.1.0
+      driver: git
+      branch: version
+      file: number
+      uri: {{git-url}}
+      private_key: {{private-repo-key}}
+
+  - name: cf-prod
+    type: cf
+    source:
+      api: https://api.run.pivotal.io
+      username: {{cf-username}}
+      password: {{cf-password}}
+      organization: {{cf-org}}
+      space: prod
+      skip_cert_check: false
+
+  - name: production-code
+    type: git
+    source:
+      branch: master
+      uri: {{git-url}}
+      private_key: {{private-repo-key}}
+      tag_filter: '*-beta\.*'
+
+jobs:
+  - name: deploy-prod
+    plan:
+      - get: production-code
+      - get: version
+      - task: gather-prod-resources
+        config:
+          platform: linux
+          image_resource:
+            type: docker-image
+            source: {repository: bash, tag: '4.4'}
+          run:
+            path: sh
+            args:
+              - -exc
+              - |
+                echo 'gathering prod resources'
+
+  - name: deploy-backend-prod
+    plan:
+      - get: production-code
+        passed: [deploy-prod]
+      - get: version
+        passed: [deploy-prod]
+        trigger: true
+      - task: build-backend-prod
+        file: production-code/concourse/backend/build-prod/task.yml
+      - put: cf-prod
+        params:
+          manifest: build-output/manifests/production/backend.yml
+
+  - name: deploy-frontend-prod
+    plan:
+      - get: production-code
+        passed: [deploy-prod]
+      - get: version
+        passed: [deploy-prod]
+        trigger: true
+      - task: build-frontend-prod
+        file: production-code/concourse/frontend/build-prod/task.yml
+      - put: cf-prod
+        params:
+          manifest: build-output/manifests/production/frontend.yml
+
+  - name: tag-release
+    plan:
+      - get: version
+        trigger: true
+        passed: [deploy-frontend-prod, deploy-backend-prod]
+        params: { bump: final }
+      - get: production-code
+        passed: [deploy-frontend-prod, deploy-backend-prod]
+      - put: production-code
+        params:
+          repository: production-code
+          tag: version/number
+          only_tag: true

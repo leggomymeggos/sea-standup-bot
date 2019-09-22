@@ -1,6 +1,7 @@
 package com.leggomymeggos.standupselector.state
 
 import java.util.*
+import java.sql.Date
 import javax.persistence.*
 
 @Entity
