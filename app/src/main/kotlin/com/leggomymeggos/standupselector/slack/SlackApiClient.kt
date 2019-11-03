@@ -14,6 +14,7 @@ class SlackApiClient(
     @Value("\${slack.api.token}") private val apiToken: String,
     @Value("\${slack.callback_token}") private val callbackToken: String,
     @Value("\${slack.url.user_info_by_email}") private val userInfoByEmailUrl: String,
+    private val slackActionService: SlackActionService,
     private val restTemplate: RestTemplate
 ) {
     fun writeToChannel(channelId: String, message: String) {
@@ -42,34 +43,9 @@ class SlackApiClient(
     }
 
     fun writeToChannelWithSelectionAttachment(channelId: String, message: String) {
-        val acceptOption = SlackButtonConfirmOption(
-            title = "Are you sure you want to confirm?",
-            text = "You will need to reach out to an admin to change this (currently)",
-            okText = "Yes",
-            dismissText = "No"
-        )
-        val acceptAction = SlackAction(
-            name = "confirmation_action",
-            text = "I accept the bot's glorious offer",
-            type = "button",
-            value = "yes",
-            confirm = acceptOption,
-            style = ""
-        )
-        val rejectOption = SlackButtonConfirmOption(
-            title = "Are you sure you wish to defy Standup Bot?",
-            text = "Standup bot may forgive, but it will never forget",
-            okText = "Yes",
-            dismissText = "No"
-        )
-        val rejectAction = SlackAction(
-            name = "confirmation_action",
-            text = "I defiantly refuse the bot",
-            type = "button",
-            value = "no",
-            confirm = rejectOption,
-            style = "danger"
-        )
+        val acceptAction = slackActionService.createAcceptAction()
+        val rejectAction = slackActionService.createRejectAction()
+
         val attachment = SlackAttachment(
             text = "Glorious standup bot, bot of bots, selector of standuppers, has generously chosen YOU to run standup for the upcoming week.",
             fallback = "Interactive messages not supported via this client",
@@ -78,6 +54,7 @@ class SlackApiClient(
             attachmentType = "default",
             actions = listOf(acceptAction, rejectAction)
         )
+
         val selectionMessage = SelectionMessageJson(
             text = message,
             channel = channelId,
@@ -136,7 +113,6 @@ data class SelectionMessageJson(
     val attachments: List<SlackAttachment>
 ): SlackJson
 
-
 data class SlackMessageJson(
     val text: String,
     val channel: String
@@ -149,20 +125,4 @@ data class SlackAttachment(
     val color: String,
     val attachmentType: String,
     val actions: List<SlackAction>
-)
-
-data class SlackAction(
-    val name: String,
-    val text: String,
-    val style: String?,
-    val type: String,
-    val value: String,
-    val confirm: SlackButtonConfirmOption
-)
-
-data class SlackButtonConfirmOption(
-    val title: String,
-    val text: String,
-    val okText: String,
-    val dismissText: String
 )
